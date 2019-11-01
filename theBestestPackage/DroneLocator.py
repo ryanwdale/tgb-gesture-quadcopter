@@ -1,13 +1,14 @@
 import cv2
+from threading import Event
 
 class DroneLocator:
-
     # define folder
-    def __init__(self, folder):
+    def __init__(self, folder, communicator, stop):
         self.folder = folder
         # connect to camera number 0. connects to web cam on my laptop
         self.video_capture = cv2.VideoCapture(0)
-        pass
+        self.communicator = communicator
+        self.stop = stop
 
     # this could be done as a seperate thread/process
     def delete_the_weakest(self):
@@ -22,18 +23,18 @@ class DroneLocator:
 
     # todo: dakota and jen
     def locate_drone(self, pic):
-        pass
+        return None, None
 
     def update(self):
-        picture = self.get_most_recent()
-        self.locate_drone(picture)
+        while not self.stop.is_set():
+            picture = self.get_most_recent()
+            primary, secondary = self.locate_drone(picture)
+            self.communicator.set_coordinates(primary, secondary)
 
 
 def main():
     dl = DroneLocator("resources")
-    # for now has to be manually stopped
-    while True:
-        dl.update()
+    dl.update()
 
 
 if __name__ == "__main__":
