@@ -1,4 +1,5 @@
 from theBestestPackage.DroneLocator import DroneLocator
+from autonomyPackage.autonomy import AutonomyController
 from threading import Thread, Event
 from typing import List, Tuple
 
@@ -7,15 +8,20 @@ class CommunicationController:
     def __init__(self):
         # movement vector from gestures
         self.move_vector = []
-        self.land = Event()      # drone lands when set
 
-        # boundary information from coordinates
-        self.primary_pos = []    # location from primary camera
-        self.secondary_pos = []  # location from secondary camera
-
+        # coordinates stuff
         self.stop_updating = Event()  # stops DroneLocator thread when set
         self.drone_locator = DroneLocator("resources", self, self.stop_updating)
         self.coordinates_thread = Thread(target=self.drone_locator.update)
+
+        # boundary information from coordinates
+        self.primary_pos = []  # location from primary camera
+        self.secondary_pos = []  # location from secondary camera
+
+        # autonomy stuff
+        self.land = Event()  # drone lands when set
+        self.autonomy_controller = AutonomyController(self, self.land)
+        self.autonomy_thread = Thread(target=self.autonomy_controller.fly)
 
         # TODO: add gestures and autonomy objects and threads
 
@@ -26,6 +32,8 @@ class CommunicationController:
         """
 
         self.coordinates_thread.start()
+        self.autonomy_thread.start()
+
         # TODO: create gestures and autonomy threads
 
     def stop(self):
