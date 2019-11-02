@@ -3,12 +3,11 @@ from threading import Event
 
 class DroneLocator:
     # define folder
-    def __init__(self, folder, communicator, stop):
+    def __init__(self, folder, communicator):
         self.folder = folder
         # connect to camera number 0. connects to web cam on my laptop
         self.video_capture = cv2.VideoCapture(0)
         self.communicator = communicator
-        self.stop = stop
 
     # this could be done as a seperate thread/process
     def delete_the_weakest(self):
@@ -26,10 +25,14 @@ class DroneLocator:
         return None, None
 
     def update(self):
-        while not self.stop.is_set():
+        while not self.communicator.stop_updating.is_set():
             picture = self.get_most_recent()
             primary, secondary = self.locate_drone(picture)
-            self.communicator.set_coordinates(primary, secondary)
+            with self.communicator.coordinates_cv:
+                while self.communicator.turn != self.communicator.coordinates:
+                    self.communicator.coordinates_cv.wait()
+                self.communicator.set_coordinates(primary, secondary)
+                self.communicator.change_turn(self.communicator.coordinates)
 
 
 def main():
