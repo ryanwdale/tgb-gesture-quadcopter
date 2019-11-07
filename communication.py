@@ -1,27 +1,34 @@
 from theBestestPackage.DroneLocator import DroneLocator
 from autonomyPackage.autonomy import AutonomyController
-from threading import Thread, Event
+from multiprocessing import Process, Event, Array
 from typing import List, Tuple
 
 
 class CommunicationController:
     def __init__(self):
         # movement vector from gestures
-        self.move_vector = []
+        move_vector = Array('d', [0, 0, 0])  # type double
+
+        # boundary information from coordinates
+        primary_pos = Array('i', [0, 0, 0])  # location from primary camera, type int
+        secondary_pos = Array('i', [0, 0, 0])  # location from secondary camera, type int
 
         # coordinates stuff
         self.stop_updating = Event()  # stops DroneLocator thread when set
-        self.drone_locator = DroneLocator("resources", self, self.stop_updating)
-        self.coordinates_thread = Thread(target=self.drone_locator.update)
-
-        # boundary information from coordinates
-        self.primary_pos = []  # location from primary camera
-        self.secondary_pos = []  # location from secondary camera
+        self.drone_locator = DroneLocator("resources")
+        self.coordinates_process = Process(target=self.drone_locator.update,
+                                           args=(primary_pos,
+                                                 secondary_pos,
+                                                 move_vector,
+                                                 self.land))
 
         # autonomy stuff
         self.land = Event()  # drone lands when set
-        self.autonomy_controller = AutonomyController(self, self.land)
-        self.autonomy_thread = Thread(target=self.autonomy_controller.fly)
+        self.autonomy_controller = AutonomyController()
+        self.autonomy_process = Process(target=self.autonomy_controller.fly,
+                                        args=(primary_pos,
+                                              secondary_pos,
+                                              self.land))
 
         # TODO: add gestures and autonomy objects and threads
 
@@ -31,8 +38,8 @@ class CommunicationController:
         :return: None
         """
 
-        self.coordinates_thread.start()
-        self.autonomy_thread.start()
+        self.coordinates_process.start()
+        self.autonomy_process.start()
 
         # TODO: create gestures and autonomy threads
 
@@ -43,35 +50,8 @@ class CommunicationController:
         :return: None
         """
         self.stop_updating.set()
+        self.land.set()
 
+        self.coordinates_process.join()
+        self.autonomy_process.join()
         # TODO: set stop events for other threads
-
-    def set_coordinates(self, primary: List[int], secondary: List[int]):
-        """
-        Called by the DroneLocator to update the Drones location
-
-        :param primary: Coordinate position of drone from perspective of primary camera
-        :param secondary: Coordinate position of drone from perspective of secondary camera
-        :return: None
-        """
-
-        self.primary_pos = primary
-        self.secondary_pos = secondary
-
-    def set_gestures(self, move: List[float], do_land: bool):
-        """
-        Called by gestures object to update the direction the drone should move
-
-        :param move: Directional vector, indicates direction the drone should move
-        :param do_land: Drone should land when True
-        :return: None
-        """
-        if do_land:
-            self.land.set()
-        self.move_vector = move
-
-    def get_coordinates(self) -> Tuple[List[int], List[int]]:
-        return self.primary_pos, self.secondary_pos
-
-    def get_gestures(self) -> List[float]:
-        return self.move_vector
