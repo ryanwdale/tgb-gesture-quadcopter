@@ -1,8 +1,9 @@
 from theBestestPackage.DroneLocator import DroneLocator
 from autonomyPackage.autonomy import AutonomyController
-from multiprocessing import Process, Event, Array
+from multiprocessing import Process, Event, Array  # Array is shared memory
 from typing import List, Tuple
 
+# This class spawns the main processes needed to run the drone
 
 class CommunicationController:
     def __init__(self):
@@ -14,6 +15,7 @@ class CommunicationController:
         secondary_pos = Array('i', [0, 0, 0])  # location from secondary camera, type int
 
         # coordinates stuff
+        # Create processes for coordinates and autonomy
         self.stop_updating = Event()  # stops DroneLocator thread when set
         self.drone_locator = DroneLocator("resources")
         self.coordinates_process = Process(target=self.drone_locator.update,
@@ -34,7 +36,7 @@ class CommunicationController:
 
     def start(self):
         """
-        starts threads
+        spawn processes
         :return: None
         """
 
