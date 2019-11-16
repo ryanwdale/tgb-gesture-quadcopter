@@ -13,7 +13,6 @@ class AutonomyController:
 
     def move(self, move_vector):
         pass
-     #comment
 
     def land(self):
 
@@ -25,6 +24,7 @@ class AutonomyController:
 
     def check_location(self, primary, secondary) -> bool:
         pass
+        #calculate location and check if it is safe to move to that location
 
     def fly(self, primary_pos, secondary_pos, directional_vector):
         while not self.land_event.is_set():
