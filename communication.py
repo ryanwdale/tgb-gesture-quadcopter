@@ -27,10 +27,7 @@ class CommunicationController:
         # autonomy stuff
         self.land = Event()  # drone lands when set
         self.autonomy_controller = AutonomyController()
-        self.autonomy_process = Process(target=self.autonomy_controller.fly,
-                                        args=(primary_pos,
-                                              secondary_pos,
-                                              self.land))
+        self.autonomy_process = Process(target=self.autonomy_controller.main)
 
         # TODO: add gestures and autonomy objects and threads
 
