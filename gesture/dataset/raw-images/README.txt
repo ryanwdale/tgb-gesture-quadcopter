@@ -1,0 +1,1 @@
+Expect images to be the format of <timestamp>.jpg
