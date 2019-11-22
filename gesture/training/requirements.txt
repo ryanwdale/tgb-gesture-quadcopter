@@ -1,6 +1,7 @@
-dronekit
-dronekit-sitl
 opencv-python
 numpy
 scipy
 imutils
+keras
+matplotlib
+sklearn
